@@ -1,12 +1,13 @@
-#offsitecheck.py
-#Look through Kaseya backup directories and produce a report
+#internalbackups.py
+#Get last week of internal backup logs from Kaseya
 #Kevin Greene
 #kevin@360itpartners.com
-#Version 2.0
-#Last Revision 6/8/2015 - Changed logfile logation
+#Version 1.0
+#Last Revision 6/9/2015
 
-import os
+from kaseyaconnect import *
 import datetime
+import os
 import csv
 from collections import defaultdict
 import operator
@@ -39,18 +40,38 @@ class backedupserver():
                                     #print "newestbackup is %s" % self.newestbackup
                                     if y["timestamp"] > self.newestbackup:
                                             self.newestbackup = y["timestamp"]
-                        
+
+#SQL Query against Kaseya's vBackuplog view in the ksubscribers database
+cursor.execute("select * from vBackupLog where EventTime > DateAdd(DAY, -7, GETDATE()) AND (groupname LIKE '%360%' OR Machine_GroupID LIKE '%kaseya%') order by EventTime desc")
+#cursor.execute("select machine_groupid, avg(imagesize) from vBackupLog group by machine_groupid order by avg(imagesize)")
+
 oldestserver = ""
 serverlist = []
 full_list=[]
 names_and_guids = []
 servers=[]
 count=0
-logfile = "output\KaseyaBackupLogs-Offsite Backups-%s.html" % datetime.datetime.now().strftime("(%m-%d-%Y %H-%M)")
+logfile = "output\InternalBackupLogs-Last7Days-%s.html" % datetime.datetime.now().strftime("(%m-%d-%Y %H-%M)")
 o = open(logfile ,'w')
+o.write("<head><script src=\"sorttable.js\"></script></head>")
+o.write("<table class=\"sortable\" style=\"width:100%\">")
+o.write("<tr><th>Machine_GroupID</th><th>agentGuid</th><th>EventTime</th><th>description</th><th>duration(sec)</th><th>statusType</th><th>result</th><th>imageSize</th></r>")
+
+for result in ResultIter(cursor):
+    o.write("<tr>")
+    o.write("<td>%s</td>" % result[0])
+    o.write("<td>%s</td>" % result[1])
+    o.write("<td>%s</td>" % result[4])
+    o.write("<td>%s</td>" % result[5])
+    o.write("<td>%s</td>" % result[6])
+    o.write("<td>%s</td>" % result[7])
+    o.write("<td>%s</td>" % result[8])
+    o.write("<td>%s</td>" % result[9])
+
+o.write("</table>")    
+             
 o.write("<div align=center><h1>Offsite Backup Check</h1><h2>%s</h2></div>" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
 o.write("<head><script src=\"sorttable.js\"></script></head>")
-
 
 with open(r'output\agentguids.csv','r') as csvfile:
         spamreader = csv.reader(csvfile)
@@ -58,7 +79,7 @@ with open(r'output\agentguids.csv','r') as csvfile:
                         full_list.append(row[0])
                         names_and_guids.append(row)
                                             
-with open(r'config\paths.csv', 'rb') as f:
+with open('config\internalpaths.csv', 'rb') as f:
     reader = csv.reader(f)
     o.write("<h2>Backup location check:</h2>")
     for l in reader:
@@ -70,29 +91,12 @@ with open(r'config\paths.csv', 'rb') as f:
                     servers.append(l[0])
 
 for l in servers:
-     for root, dirs, files in os.walk(l):        
+      for root, dirs, files in os.walk(l):        
         if os.path.basename(root) == "VolBackup" or os.path.basename(root) == "FldrBackup" :
             sID = os.path.basename(os.path.dirname(root))
             path = os.path.dirname(os.path.dirname(root))
-
-            for x in names_and_guids:
-                    if x[1] == sID:
-                            servername = x[0]
-            
-
-            ''' section deprecated because I found a better way to get agent names/guids
-            for h, j ,k in os.walk(os.path.dirname(path)):
-                #h=root   
-                #j=dirs
-                #k=files
- 
-                for v in j: 
-                        if sID in v:
-                            i = sID.find("=") 
-                            servername = v[i+2:]
-                        else: servername = "not found"
-                '''
-                
+            servername = [x[0] for x in names_and_guids if x[1] == sID][0]
+               
             setlist=[]
             for d in dirs:
                 backupset = defaultdict()
@@ -126,9 +130,7 @@ o.write("<table class=\"sortable\" style=\"width:100%\">")
 o.write("<tr><th>Server Name</th><th>Path</th><th>Newest Backup</th></r>")
 
 for s in serverlist:
-     
      if s.n in full_list:
-             
              full_list.remove(s.n)
      o.write("<tr>")
      o.write("<td>%s</td>" % s.n)
@@ -137,16 +139,7 @@ for s in serverlist:
      o.write("</tr>")
 
 o.write("</table>")
-o.write("<h1>")
-o.write("Number of servers found: %s<br>" % len(serverlist))
-o.write("Number of server missing: %s<br>" % len(full_list))
-o.write("List of missing servers:<br>")
-o.write("</h1>")
-o.write("<i>Servers could be missing because the client has their own offsite backup location, offsite misconfiguration, error when scanning backup directories, it is a backup server, or they are not using offsite backups.</i><br>")
-for srv in full_list:
-        o.write("%s<br>" % srv)
+
 o.close()
 
         
-
-

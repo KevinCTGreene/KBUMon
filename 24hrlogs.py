@@ -8,7 +8,7 @@
 from kaseyaconnect import *
 import datetime
 #SQL Query against Kaseya's vBackuplog view in the ksubscribers database
-cursor.execute("select * from vBackupLog where EventTime > DateAdd(DAY, -1, GETDATE()) order by EventTime desc")
+cursor.execute("select * from vBackupLog where EventTime >  DateAdd(DAY, -1, GETDATE()) order by EventTime desc")
 
 logfile = "output\KaseyaBackupLogs-Last 24hrs-%s.html" % datetime.datetime.now().strftime("(%m-%d-%Y %H-%M)")
 f = open(logfile ,'w')
