@@ -47,3 +47,4 @@ offsitecheck - Copy.py
 *.html
 output/agentguids.csv
 *.pyc
+*.csv
