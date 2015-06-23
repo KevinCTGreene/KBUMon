@@ -51,9 +51,9 @@ full_list=[]
 names_and_guids = []
 servers=[]
 count=0
-logfile = "output\InternalBackupLogs-Last7Days-%s.html" % datetime.datetime.now().strftime("(%m-%d-%Y %H-%M)")
+logfile = "output\Internal Backup Logs\InternalBackupLogs-Last7Days-%s.html" % datetime.datetime.now().strftime("(%m-%d-%Y %H-%M)")
 o = open(logfile ,'w')
-o.write("<head><script src=\"sorttable.js\"></script></head>")
+o.write("<head><script src=\"..\sorttable.js\"></script></head>")
 o.write("<table class=\"sortable\" style=\"width:100%\">")
 o.write("<tr><th>Machine_GroupID</th><th>agentGuid</th><th>EventTime</th><th>description</th><th>duration(sec)</th><th>statusType</th><th>result</th><th>imageSize</th></r>")
 

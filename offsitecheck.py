@@ -46,10 +46,10 @@ full_list=[]
 names_and_guids = []
 servers=[]
 count=0
-logfile = "output\KaseyaBackupLogs-Offsite Backups-%s.html" % datetime.datetime.now().strftime("(%m-%d-%Y %H-%M)")
+logfile = "output\Offsite Backup Check\KaseyaBackupLogs-Offsite Backups-%s.html" % datetime.datetime.now().strftime("(%m-%d-%Y %H-%M)")
 o = open(logfile ,'w')
 o.write("<div align=center><h1>Offsite Backup Check</h1><h2>%s</h2></div>" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
-o.write("<head><script src=\"sorttable.js\"></script></head>")
+o.write("<head><script src=\"..\sorttable.js\"></script></head>")
 
 
 with open(r'output\agentguids.csv','r') as csvfile:
